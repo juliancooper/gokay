@@ -128,8 +128,6 @@ func (s ExampleStruct) Validate() error {
 	}
 
 }
-
-// Validate
 func (s HasValidateImplicit) Validate() error {
 	em := make(gokay.ErrorMap)
 
@@ -370,8 +368,6 @@ func (s HasValidateImplicit) Validate() error {
 	}
 
 }
-
-// Validate
 func (s NotNilTestStruct) Validate() error {
 	em := make(gokay.ErrorMap)
 
@@ -411,6 +407,8 @@ func (s NotNilTestStruct) Validate() error {
 
 	if len(em) > 0 {
 		return em
+	} else {
+		return nil
 	}
-	return nil
+
 }

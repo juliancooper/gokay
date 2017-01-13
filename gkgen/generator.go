@@ -73,7 +73,7 @@ func (s *ValidateGenerator) Generate(out io.Writer, i interface{}) error {
 		if tag != "" && tag != "-" {
 			field := structType.Field(j)
 
-			vcs, err := ParseTag(i, tag)
+			vcs, err := ParseTag(tag)
 			if err != nil {
 				return fmt.Errorf("Unable to parse tag: '%v'. Error: '%v'", tag, err)
 			}

@@ -28,7 +28,7 @@ func (s *ValidationCommand) Name() string {
 }
 
 // ParseTag parses given struct tags
-func ParseTag(interf interface{}, tag string) ([]ValidationCommand, error) {
+func ParseTag(tag string) ([]ValidationCommand, error) {
 	inr := strings.NewReader(tag)
 	out := new(bytes.Buffer)
 	vcs := make([]ValidationCommand, 0, 8)
@@ -43,7 +43,7 @@ func ParseTag(interf interface{}, tag string) ([]ValidationCommand, error) {
 			}
 			name = out.String()
 			out.Reset()
-			params, err := parseParams(interf, inr)
+			params, err := parseParams(inr)
 			if err != nil {
 				return nil, err
 			}
@@ -83,7 +83,7 @@ func ParseTag(interf interface{}, tag string) ([]ValidationCommand, error) {
 }
 
 // parseParams parses the given parameters
-func parseParams(interf interface{}, inr *strings.Reader) ([]string, error) {
+func parseParams(inr *strings.Reader) ([]string, error) {
 	ch, _, readerErr := inr.ReadRune()
 	params := make([]string, 0, 8)
 	if readerErr != nil {

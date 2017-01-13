@@ -3,6 +3,7 @@ package gkgen
 import (
 	"errors"
 	"fmt"
+	"go/ast"
 	"reflect"
 )
 
@@ -53,6 +54,29 @@ func (s *HexValidator) Generate(sType reflect.Type, fieldStruct reflect.StructFi
 		}
 		return "", fmt.Errorf("HexValidator does not support fields of type: '%v'", field.Kind())
 	}
+}
+
+// ASTGenerate generates validation code
+func (s *HexValidator) ASTGenerate(field *ast.Field, params []string) (string, error) {
+	if len(params) != 0 {
+		return "", errors.New("Hex takes no parameters")
+	}
+
+	if ft, ok := field.Type.(*ast.Ident); ok {
+		if ft.Name == "string" {
+			if len(field.Names) != 1 {
+				return "", errors.New("Gokay AST mode does not yet support putting multiple fields on a single line")
+			}
+
+			return fmt.Sprintf(`
+			if err := gokay.IsHex(&s.%[1]s); err != nil {
+				errors%[1]s = append(errors%[1]s, err)
+			}
+			`, field.Names[0]), nil
+		}
+	}
+
+	return "", nil
 }
 
 // Name provides access to the name field

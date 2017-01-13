@@ -30,3 +30,15 @@ func TestGenerateHexValidationCode_StringPtr(t *testing.T) {
 	code = strings.Replace(strings.TrimSpace(code), "\t", "", -1)
 	require.Equal(t, "if err := gokay.IsHex(s.HexStringPtr); err != nil {\nerrorsHexStringPtr = append(errorsHexStringPtr, err)\n}", code)
 }
+
+// func TestHexValidatorASTGenerate_string(t *testing.T) {
+// 		hv := NewHexValidator()
+// 	e := ExampleStruct{}
+// 	et := reflect.TypeOf(e)
+// 	field, _ := et.FieldByName("HexString")
+
+// 	code, err := hv.ASTGenerate
+// 	require.NoError(t, err)
+// 	code = strings.Replace(strings.TrimSpace(code), "\t", "", -1)
+// 	require.Equal(t, "if err := gokay.IsHex(&s.HexString); err != nil {\nerrorsHexString = append(errorsHexString, err)\n}", code)
+// }

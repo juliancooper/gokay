@@ -15,12 +15,14 @@ import (
 	"strings"
 
 	"github.com/pborman/uuid"
+	"github.com/zencoder/gokay/gkast"
 )
 
 // usage is a string used to provide a user with the application usage
-const usage = `usage: gokay <file> [generator-package generator-contructor]
+const usage = `usage: gokay <file> [(ast||generator-package generator-contructor)]
 	generator-package        custom package
 	generator-contructor     custom generator
+	ast                      experimental mode that generate Validate function in one step
 
 examples:
 	gokay file.go
@@ -35,7 +37,7 @@ func main() {
 	}
 
 	genPackage := "gkgen"
-	genConstructor := "NewValidator"
+	genConstructor := "NewValidateGenerator"
 	if len(args) >= 3 {
 		genPackage = args[1]
 		genConstructor = args[2]
@@ -76,7 +78,25 @@ func main() {
 		log.Fatalf("IO Error while reading %v: %v\n", fileName, err)
 	}
 
-	fmt.Fprintf(outWriter, `package main
+	sortedObjectKeys := make([]string, len(f.Scope.Objects))
+	for k := range f.Scope.Objects {
+		sortedObjectKeys = append(sortedObjectKeys, k)
+	}
+	sort.Strings(sortedObjectKeys)
+
+	// TODO: Make mode-selection less hacky
+	astMode := len(args) >= 2 && args[1] == "ast"
+	if astMode {
+		// Short circuit into AST mode for now
+		outFile, _ := os.Create(outFilePath)
+		outWriter := io.MultiWriter(outFile, os.Stdout)
+
+		generator := gkast.NewValidateASTGenerator()
+		generator.Generate(outWriter, f)
+		// os.Exit(0)
+	} else {
+
+		fmt.Fprintf(outWriter, `package main
 	func main() {
 		out, err := os.Create("%s")
 		defer out.Close()
@@ -88,42 +108,38 @@ func main() {
 		v := %s.%s()
 	`, outFilePath, f.Name.String(), genPackage, genConstructor)
 
-	sortedObjectKeys := make([]string, len(f.Scope.Objects))
-	for k := range f.Scope.Objects {
-		sortedObjectKeys = append(sortedObjectKeys, k)
+		for _, k := range sortedObjectKeys {
+			if k == "" {
+				continue
+			}
+			d := f.Scope.Objects[k]
+			ts, ok := d.Decl.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			switch ts.Type.(type) {
+			case *ast.StructType:
+				fmt.Fprintf(outWriter, "if err := v.Generate(out, %s.%s{}); err != nil {\npanic(err.Error())\n}\n", f.Name.String(), ts.Name.String())
+			}
+		}
+
+		fmt.Fprintf(outWriter, "}\n")
 	}
-	sort.Strings(sortedObjectKeys)
-
-	for _, k := range sortedObjectKeys {
-		if k == "" {
-			continue
-		}
-		d := f.Scope.Objects[k]
-		ts, ok := d.Decl.(*ast.TypeSpec)
-		if !ok {
-			continue
-		}
-		switch ts.Type.(type) {
-		case *ast.StructType:
-			fmt.Fprintf(outWriter, "if err := v.Generate(out, %s.%s{}); err != nil {\npanic(err.Error())\n}\n", f.Name.String(), ts.Name.String())
-		}
-	}
-
-	fmt.Fprintf(outWriter, "}\n")
-
 	// run goimports on the file
-	tmpimportsCmd := exec.Command("goimports", "-w", tempOut.Name())
-	tmpimportsCmd.Stdout = os.Stdout
-	tmpimportsCmd.Stderr = os.Stderr
-	if err := tmpimportsCmd.Run(); err != nil {
-		log.Fatalf("Failed running goimports on intermediate executable code: %v\n", err.Error())
-	}
+	if !astMode {
+		tmpimportsCmd := exec.Command("goimports", "-w", tempOut.Name())
+		tmpimportsCmd.Stdout = os.Stdout
+		tmpimportsCmd.Stderr = os.Stderr
+		if err := tmpimportsCmd.Run(); err != nil {
+			log.Fatalf("Failed running goimports on intermediate executable code: %v\n", err.Error())
+		}
 
-	generateCmd := exec.Command("go", "run", tempFile)
-	generateCmd.Stderr = os.Stderr
-	generateCmd.Stdout = os.Stdout
-	if err := generateCmd.Run(); err != nil {
-		log.Fatalf("Failed executing intermediate executable to generate gokay validators failed: %v\n", err.Error())
+		generateCmd := exec.Command("go", "run", tempFile)
+		generateCmd.Stderr = os.Stderr
+		generateCmd.Stdout = os.Stdout
+		if err := generateCmd.Run(); err != nil {
+			log.Fatalf("Failed executing intermediate executable to generate gokay validators failed: %v\n", err.Error())
+		}
 	}
 
 	// run goimports on the file path

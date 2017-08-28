@@ -34,6 +34,7 @@ test:
 	go test $(V) ./gokay -race -cover -coverprofile=$(COVERAGEDIR)/gokay.coverprofile
 	go test $(V) ./internal/gkexample -race -cover -coverprofile=$(COVERAGEDIR)/gkexample.coverprofile
 
+
 .PHONY: cover
 cover:
 	go tool cover -html=$(COVERAGEDIR)/gkgen.coverprofile -o $(COVERAGEDIR)/gkgen.html

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/pborman/uuid"
-	"github.com/zencoder/gokay/gkast"
+	"github.com/zencoder/gokay/gkgen"
 )
 
 // usage is a string used to provide a user with the application usage
@@ -91,7 +91,7 @@ func main() {
 		outFile, _ := os.Create(outFilePath)
 		outWriter := io.MultiWriter(outFile, os.Stdout)
 
-		generator := gkast.NewValidateASTGenerator()
+		generator := gkgen.NewValidateASTGenerator()
 		generator.Generate(outWriter, f)
 		// os.Exit(0)
 	} else {

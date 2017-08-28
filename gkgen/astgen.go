@@ -1,4 +1,4 @@
-package gkast
+package gkgen
 
 import (
 	"bytes"
@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/zencoder/gokay/gkgen"
 )
 
 // ValidateASTGenerator holds a map of identifiers and ASTGenerater's
@@ -36,7 +35,7 @@ func NewValidateASTGenerator() *ValidateASTGenerator {
 	v := &ValidateASTGenerator{make(map[string]ASTGenerater)}
 	// v.AddValidation(NewNotNilValidator())
 	// v.AddValidation(NewLengthValidator())
-	v.AddValidation(gkgen.NewHexValidator())
+	v.AddValidation(NewHexValidator())
 	// v.AddValidation(NewUUIDValidator())
 	// v.AddValidation(NewBCP47Validator())
 	return v
@@ -90,7 +89,7 @@ func (s *ValidateASTGenerator) Generate(out io.Writer, f *ast.File) error {
 			fmt.Println(reflectTag)
 			gokayTag := reflectTag.Get("valid")
 
-			vcs, _ := gkgen.ParseTag(gokayTag)
+			vcs, _ := ParseTag(gokayTag)
 			spew.Dump(vcs)
 
 			fmt.Fprintf(fvBuf, `

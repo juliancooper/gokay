@@ -11,9 +11,8 @@ type EmptyStruct struct{}
 
 // TestParseTagSingleNoParamValidation tests single no-param validation
 func TestParseTagSingleNoParamValidation(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 	require.NoError(t, err)
 
 	expectedCommand := NewValidationCommand("bar")
@@ -23,19 +22,13 @@ func TestParseTagSingleNoParamValidation(t *testing.T) {
 
 // Test single no-param validation
 func TestExampleValidStruct(t *testing.T) {
-	key := "abc123"
-	s := ExampleStruct{
-		HexStringPtr: &key,
-	}
-
-	_, err := ParseTag(s, "valid")
+	_, err := ParseTag("valid")
 	require.NoError(t, err)
 }
 
 func TestParseTagMultipleNoParamValidations(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar,biz,buz"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 
 	require.NoError(t, err)
 	barCommand := NewValidationCommand("bar")
@@ -49,31 +42,28 @@ func TestParseTagMultipleNoParamValidations(t *testing.T) {
 
 // Test leading comma
 func TestParseTagLeadingComma(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := ",bar"
-	_, err := ParseTag(s, tag)
+	_, err := ParseTag(tag)
 	require.Error(t, err)
 }
 
 // Test trailing commas
 func TestParseTagTrailingCommas(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar,"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 	require.NoError(t, err)
 	expectedVcs := []ValidationCommand{NewValidationCommand("bar")}
 	require.Equal(t, expectedVcs, vcs)
 
 	tag = "two_commas,,"
-	_, err = ParseTag(s, tag)
+	_, err = ParseTag(tag)
 	require.Error(t, err)
 }
 
 // Test validation with multiple parameters
 func TestParseTagWithConstParam(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar=(hello world,\\)How are you?)"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(vcs))
 	require.Equal(t, "bar", vcs[0].Name())
@@ -82,34 +72,30 @@ func TestParseTagWithConstParam(t *testing.T) {
 }
 
 func TestParseTagWithConstParamSyntaxError(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar=(?foo\\)[biz]"
-	_, err := ParseTag(s, tag)
+	_, err := ParseTag(tag)
 	require.Error(t, err)
 }
 
 func TestParseTagMissingParamSyntaxError(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar=,foo"
-	_, err := ParseTag(s, tag)
+	_, err := ParseTag(tag)
 	require.Error(t, err)
 
 	tag = "bar="
-	_, err = ParseTag(s, tag)
+	_, err = ParseTag(tag)
 	require.Equal(t, io.EOF, err)
 }
 
 func TestParseTagLeadingEquals(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "="
-	_, err := ParseTag(s, tag)
+	_, err := ParseTag(tag)
 	require.Error(t, err)
 }
 
 func TestParseTagWithMultipleParams(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar=(bar0)(bar1)"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(vcs))
 	require.Equal(t, "bar", vcs[0].Name())
@@ -119,9 +105,8 @@ func TestParseTagWithMultipleParams(t *testing.T) {
 }
 
 func TestParseTag2ValidationsWith1ParamEach(t *testing.T) {
-	s := new(EmptyStruct)
 	tag := "bar=(bar0)(bar1),foo=(foo0)"
-	vcs, err := ParseTag(s, tag)
+	vcs, err := ParseTag(tag)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(vcs))
 
